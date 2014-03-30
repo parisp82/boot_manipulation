@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "mincrypt/sha.h"
+#include "sha.h"
 #include "bootimg.h"
 
 static void *load_file(const char *fn, unsigned *_sz)
