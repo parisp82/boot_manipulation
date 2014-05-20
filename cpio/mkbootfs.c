@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
-#include <private/android_filesystem_config.h>
+#include "../include/private/android_filesystem_config.h"
 
 /* NOTES
 **
