@@ -18,8 +18,8 @@
  * Taken from linux/capability.h, with minor modifications
  */
 
-#ifndef _SYSTEM_CORE_INCLUDE_PRIVATE_ANDROID_FILESYSTEM_CAPABILITY_H
-#define _SYSTEM_CORE_INCLUDE_PRIVATE_ANDROID_FILESYSTEM_CAPABILITY_H
+#ifndef _ANDROID_FILESYSTEM_CAPABILITY_H
+#define _ANDROID_FILESYSTEM_CAPABILITY_H
 
 #include <stdint.h>
 
