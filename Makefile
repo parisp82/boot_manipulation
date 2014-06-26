@@ -28,18 +28,31 @@ all: $(LIB_OBJS) mkbootimg/mkbootimg mkbootimg/unmkbootimg cpio/mkbootfs
 # properly then a compatible toolchain is required.
 
 libmincrypt/sha.o: libmincrypt/sha.c
-	$(CROSS_COMPILE)$(CC) -o $@ -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^ $(INC)
 
 libmincrypt/rsa.o: libmincrypt/rsa.c
-	$(CROSS_COMPILE)$(CC) -o $@ -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^ $(INC)
 
 libmincrypt/sha256.o: libmincrypt/sha256.c
-	$(CROSS_COMPILE)$(CC) -o $@ -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^ $(INC)
 
 # Commented out due to lack of support
 # with AR while compiling from my phone
 #$(LIB): $(LIB_OBJS)
 #	 $(CROSS_COMPILE)$(AR) $@ $^
+
+# Use -O3 optimizations when compiling .c source to .o
+# This will significantly increase the final build size
+# but will also significantly increase their performance.
+
+mkbootimg/mkbootimg.o: mkbootimg/mkbootimg.c
+	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^
+
+mkbootimg/unmkbootimg.o: mkbootimg/unmkbootimg.c
+	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^
+
+cpio/mkbootfs.o: cpio/mkbootfs.c
+	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^
 
 mkbootimg/mkbootimg: mkbootimg/mkbootimg.o
 	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) -static
