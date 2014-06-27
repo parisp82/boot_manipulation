@@ -1,6 +1,8 @@
 CC = gcc
 AR = ar rcv
 EXT = a
+CFLAGS = -ffunction-sections -fdata-sections -O3
+LDFLAGS = -Wl,--gc-sections
 LIB = libmincrypt.$(EXT)
 LIB_OBJS = libmincrypt/sha.o libmincrypt/rsa.o libmincrypt/sha256.o
 INC = -I..
@@ -28,13 +30,13 @@ all: $(LIB_OBJS) mkbootimg/mkbootimg mkbootimg/unmkbootimg cpio/mkbootfs
 # properly then a compatible toolchain is required.
 
 libmincrypt/sha.o: libmincrypt/sha.c
-	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
 
 libmincrypt/rsa.o: libmincrypt/rsa.c
-	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
 
 libmincrypt/sha256.o: libmincrypt/sha256.c
-	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
 
 # Commented out due to lack of support
 # with AR while compiling from my phone
@@ -46,22 +48,30 @@ libmincrypt/sha256.o: libmincrypt/sha256.c
 # but will also significantly increase their performance.
 
 mkbootimg/mkbootimg.o: mkbootimg/mkbootimg.c
-	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 mkbootimg/unmkbootimg.o: mkbootimg/unmkbootimg.c
-	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 cpio/mkbootfs.o: cpio/mkbootfs.c
-	$(CROSS_COMPILE)$(CC) -o $@ -O3 -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 mkbootimg/mkbootimg: mkbootimg/mkbootimg.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) -static
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -static -s
 
 mkbootimg/unmkbootimg: mkbootimg/unmkbootimg.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ -static
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LDFLAGS) -static -s
 
 cpio/mkbootfs: cpio/mkbootfs.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ -I../include -static
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ -I../include $(LDFLAGS) -static -s
+
+# You should always run strip --strip-all
+# or you can apply '-s' as seen above
+# on the final executable (assuming that
+# you don't care about symbol
+# informations): this alone usually gives a
+# 20-30% improvement on final build size.
+
 
 # Run 'make clean' to clear directories
 # of your previous builds
