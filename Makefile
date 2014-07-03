@@ -1,35 +1,29 @@
-CFLAGS  += -Wall -Wextra -Wno-unused-parameter -pedantic -pipe
-CFLAGS  += -std=c99 -D_GNU_SOURCE
-CFLAGS  += -Iinclude
+all: main.o sha.o rsa.o sha256.o mkbootimg.o nbimg.o unmkbootimg.o
+	$(CC) -o multibinary main.o sha.o rsa.o sha256.o mkbootimg.o nbimg.o unmkbootimg.o
 
-bin: rsa.o sha.o sha256.o mkbootimg.o unmkbootimg.o mkbootfs.o nbimg.o buildit.o
-	gcc rsa.o sha.o sha256.o mkbootimg.o unmkbootimg.o nbimg.o main.o -o multibinary
 
-rsa: rsa.c
-	gcc -c rsa.c
-	
-sha: sha.c
-	gcc -c sha.c
-	
-sha256: sha256.c
-	gcc -c sha256.c
+sha.o: sha.c
+	$(CC) -o sha.o -c sha.c
 
-unmkbootimg: unmkbootimg.c
-	gcc -c unmkbootimg.c
+rsa.o: rsa.c
+	$(CC) -o rsa.o -c rsa.c
 
-mkbootimg: mkbootimg.c
-	gcc -c mkbootimg.c
-	
-mkbootfs: mkbootfs.c
-	gcc -c mkbootfs.c
-	
-nbimg: nbimg.c
-	gcc -c nbimg.c
+sha256.o: sha256.c
+	$(CC) -o sha256.o -c sha256.c
 
-main: main.c
-	gcc -c main.c
+nbimg.o: nbimg.c
+	$(CC) -o nbimg.o -c nbimg.c
+
+unmkbootimg.o: unmkbootimg.c
+	$(CC) -o unmkbootimg.o -c unmkbootimg.c
+
+mkbootimg.o: mkbootimg.c
+	$(CC) -o mkbootimg.o -c mkbootimg.c
+
+main.o: main.c
+	$(CC) -o main.o -c main.c
 
 clean:
-	rm -f **/*.o
+	rm -f ./*.o
 
 .PHONY: clean

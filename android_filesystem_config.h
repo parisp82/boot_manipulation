@@ -27,11 +27,8 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-#ifdef HAVE_ANDROID_OS
+
 #include <linux/capability.h>
-#else
-#include "android_filesystem_capability.h"
-#endif
 
 /* This is the master Users and Groups config for the platform.
 ** DO NOT EVER RENUMBER.

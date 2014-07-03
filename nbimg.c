@@ -393,7 +393,7 @@ void help_show_message()
 	fprintf(stderr, "   -T <type>        NBH header type, this is typically 0x600 or 0x601\n\n");
 }
 
-int main(int argc, char** argv)
+int nbimg_main(int argc, char** argv)
 {
 	char filename[1024];
 

@@ -56,7 +56,7 @@ oops:
     return 0;
 }
 
-int usage(void)
+int mkbootimg_usage(void)
 {
     fprintf(stderr,"usage: mkbootimg\n"
             "       --kernel <filename>\n"
@@ -93,7 +93,7 @@ int write_padding(FILE *fd, unsigned pagesize, unsigned itemsize)
     }
 }
 
-int main(int argc, char **argv)
+int mkbootimg_main(int argc, char **argv)
 {
     boot_img_hdr hdr;
 
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
         char *arg = argv[0];
         char *val = argv[1];
         if(argc < 2) {
-            return usage();
+            return mkbootimg_usage();
         }
         argc -= 2;
         argv += 2;
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
                 return -1;
             }
         } else {
-            return usage();
+            return mkbootimg_usage();
         }
     }
     hdr.page_size = pagesize;
@@ -172,22 +172,22 @@ int main(int argc, char **argv)
 
     if(bootimg == 0) {
         fprintf(stderr,"error: no output filename specified\n");
-        return usage();
+        return mkbootimg_usage();
     }
 
     if(kernel_fn == 0) {
         fprintf(stderr,"error: no kernel image specified\n");
-        return usage();
+        return mkbootimg_usage();
     }
 
     if(ramdisk_fn == 0) {
         fprintf(stderr,"error: no ramdisk image specified\n");
-        return usage();
+        return mkbootimg_usage();
     }
 
     if(strlen(board) >= BOOT_NAME_SIZE) {
         fprintf(stderr,"error: board name too large\n");
-        return usage();
+        return mkbootimg_usage();
     }
 
     strcpy(hdr.name, board);

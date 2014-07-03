@@ -14,55 +14,42 @@
 
 
 
+
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <dirent.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <getopt.h>
-#include "rsa.h"
-#include "sha.h"
-#include "sha256.h"
-#include "bootimg.h"
-#include <inttypes.h>
-#include "hash-internal.h"
+#include <libgen.h>
 
 
 
-
-
- int mkbootimg(int argc, char *argv[]);
- int unmkbootimg(int argc, char *argv[]);
- int mkbootfs(int argc, char *argv[]);
- int nbimg(int argc, char *argv[]); {
+ int mkbootimg_main(int argc, char **argv[]);
+ int unmkbootimg_main(int argc, char **argv[]);
+ int mkbootfs_main(int argc, char **argv[]);
+ int nbimg_main(int argc, char **argv[]);
+ int main(int argc, char* argv[]) {
     int arg_multicall = 0;
     char *callname;
     goto parse_callname;
 
 parse_callname:
-	callname = basename(argv[0]);
+callname = basename(argv[0]);
 
-    if (strcmp(callname, "bm_mkbootimg") == 0) {
-        return mkbootimg(argc, argv);
-    } else if (strcmp(callname, "bm_unmkbootimg") == 0) {
-        return unmkbootimg(argc, argv);
-    } else if (strcmp(callname, "bm_mkbootfs") == 0) {
-        return mkbootfs(argc, argv);
-    } else if (strcmp(callname, "bm_nbimg") == 0) {
-        return nbimg(argc, argv);
+
+    if (strcmp(callname, "mkbootimg") == 0) {
+        return mkbootimg_main(argc, argv);
+    } else if (strcmp(callname, "unmkbootimg") == 0) {
+        return unmkbootimg_main(argc, argv);
+    } else if (strcmp(callname, "mkbootfs") == 0) {
+        return mkbootfs_main(argc, argv);
+    } else if (strcmp(callname, "nbimg") == 0) {
+        return nbimg_main(argc, argv);
     } else {
         if (argc < 2 || arg_multicall) {
             printf("Info: Multicall binary for:\n"
-                   "* bm_mkbootimg\n"
-                   "* bm_unmkbootimg\n"
-                   "* bm_mkbootfs\n"
-                   "* bm_nbimg\n");
+                   "* mkbootimg\n"
+                   "* unmkbootimg\n"
+                   "* mkbootfs\n"
+                   "* nbimg\n");
             return -1;
         }
 

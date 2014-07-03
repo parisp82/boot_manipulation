@@ -320,7 +320,7 @@ static void read_canned_config(char* filename)
 }
 
 
-int main(int argc, char *argv[])
+int mkbootfs_main(int argc, char *argv[])
 {
     argc--;
     argv++;

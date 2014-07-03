@@ -78,7 +78,7 @@ int usage(void)
     return 1;
 }
 
-int main(int argc, char **argv)
+int unmkbootimg_main(int argc, char **argv)
 {
     void *file_data = 0;
     unsigned file_size = 0;
