@@ -25,6 +25,7 @@
  int mkbootimg_main(int argc, char **argv[]);
  int unmkbootimg_main(int argc, char **argv[]);
  int mkbootfs_main(int argc, char **argv[]);
+ int mkbootimg_mt65xx_main(int argc, char **argv[]);
  int main(int argc, char* argv[]) {
     int arg_multicall = 0;
     char *callname;
@@ -38,6 +39,8 @@ callname = basename(argv[0]);
         return mkbootimg_main(argc, argv);
     } else if (strcmp(callname, "unmkbootimg") == 0) {
         return unmkbootimg_main(argc, argv);
+    } else if (strcmp(callname, "mkbootimg_mt65xx") == 0) {
+        return mkbootimg_mt65xx_main(argc, argv);
     } else if (strcmp(callname, "mkbootfs") == 0) {
         return mkbootfs_main(argc, argv);
     } else {
@@ -45,6 +48,7 @@ callname = basename(argv[0]);
             printf("Info: Multicall binary for:\n"
                    "* mkbootimg\n"
                    "* unmkbootimg\n"
+                   "* mkbootimg_mt65xx\n"
                    "* mkbootfs\n");
             return -1;
         }
