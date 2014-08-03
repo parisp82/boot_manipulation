@@ -6,11 +6,11 @@ CFLAGS = -ffunction-sections -fdata-sections -O3
 LDFLAGS = -Wl,--gc-sections
 LIB = libmincrypt.$(EXT)
 LIB_OBJS = libmincrypt/sha.o libmincrypt/rsa.o libmincrypt/sha256.o
-OBJ = main.o mkbootimg/mkbootimg.o mkbootimg/unmkbootimg.o cpio/mkbootfs.o
-BINARY = mkbootimg/mkbootimg mkbootimg/unmkbootimg cpio/mkbootfs
+OBJ = main.o mkbootimg/mkbootimg.o mkbootimg/unmkbootimg.o mkbootimg/mkbootimg_mt65xx.o cpio/mkbootfs.o
+BINARY = mkbootimg/mkbootimg mkbootimg/unmkbootimg mkbootimg/mkbootimg_mt65xx cpio/mkbootfs
 INC = -I..
 RM = rm -f
-BINARY_NAME = testme
+BINARY_NAME = bm
 
 # Binaries such as these must be
 # compiled statically if you wish
@@ -71,6 +71,9 @@ main.o: main.c
 
 mkbootimg/mkbootimg.o: mkbootimg/mkbootimg.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+	
+mkbootimg/mkbootimg_mt65xx.o: mkbootimg/mkbootimg_mt65xx.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 mkbootimg/unmkbootimg.o: mkbootimg/unmkbootimg.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
@@ -79,6 +82,9 @@ cpio/mkbootfs.o: cpio/mkbootfs.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 mkbootimg/mkbootimg: mkbootimg/mkbootimg.o
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -static -s
+	 
+mkbootimg/mkbootimg_mt65xx: mkbootimg/mkbootimg_mt65xx.o
 	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -static -s
 
 mkbootimg/unmkbootimg: mkbootimg/unmkbootimg.o
