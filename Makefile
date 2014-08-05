@@ -2,12 +2,18 @@ CC = gcc
 STRIP = strip
 AR = ar rcv
 EXT = a
-CFLAGS = -ffunction-sections -fdata-sections -O3
+RELEASE=r120
+# These flags are for lz4
+FLAGS = -std=c99 -Wall -Wextra -Wundef -Wshadow -Wstrict-prototypes -DLZ4_VERSION=\"$(RELEASE)\"
+CFLAGS = -ffunction-sections -fdata-sections -O3 -static
 LDFLAGS = -Wl,--gc-sections
 LIB = libmincrypt.$(EXT)
 LIB_OBJS = libmincrypt/sha.o libmincrypt/rsa.o libmincrypt/sha256.o
+LZ4DIR = lz4-r120
+PROGRAMS = lz4-r120/programs
 OBJ = main.o mkbootimg/mkbootimg.o mkbootimg/unmkbootimg.o mkbootimg/mkbootimg_mt65xx.o cpio/mkbootfs.o
 BINARY = mkbootimg/mkbootimg mkbootimg/unmkbootimg mkbootimg/mkbootimg_mt65xx cpio/mkbootfs
+LZ4 = $(LZ4DIR)/lz4.o $(LZ4DIR)/lz4hc.o $(PROGRAMS)/bench.o $(PROGRAMS)/xxhash.o $(PROGRAMS)/lz4io.o $(PROGRAMS)/lz4cli.o
 INC = -I..
 RM = rm -f
 BINARY_NAME = bm
@@ -18,17 +24,14 @@ BINARY_NAME = bm
 # such as Anykernel, SickleSwap,
 # MyMinds_Kernel_Swap, etc, etc.
 
-# All three binaries will be found in:
-# ./mkbootimg/mkbootimg
-# ./mkbootimg/unmkbootimg
-# ./cpio/mkbootfs
 
 # Run "make multi" to build a multi call binary
 
 multi:
 	 make $(LIB_OBJS)
 	 make $(OBJ)
-	$(CC) $(CFLAGS) -static -s -o $(BINARY_NAME) $(LIB_OBJS) $(OBJ)
+	 make $(LZ4)
+	$(CC) $(CFLAGS) -s -o $(BINARY_NAME) $(LIB_OBJS) $(OBJ) $(LZ4)
 
 # Passing --remove-section=.comment
 # and --remove-section=.note to strip
@@ -41,6 +44,7 @@ multi:
 
 # Run 'make all' to compile all three binaries statically
 
+# Deprecated
 all: $(LIB_OBJS) $(OBJ) $(BINARY)
 
 # The following three for sha.o, rsa.o & sha256.o
@@ -69,6 +73,24 @@ libmincrypt/sha256.o: libmincrypt/sha256.c
 main.o: main.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
+$(LZ4DIR)/lz4.o: $(LZ4DIR)/lz4.c
+	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
+$(LZ4DIR)/lz4hc.o: $(LZ4DIR)/lz4hc.c
+	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
+$(PROGRAMS)/bench.o: $(PROGRAMS)/bench.c
+	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
+$(PROGRAMS)/xxhash.o: $(PROGRAMS)/xxhash.c
+	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
+$(PROGRAMS)/lz4io.o: $(PROGRAMS)/lz4io.c
+	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
+$(PROGRAMS)/lz4cli.o: $(PROGRAMS)/lz4cli.c
+	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
 mkbootimg/mkbootimg.o: mkbootimg/mkbootimg.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 	
@@ -82,16 +104,16 @@ cpio/mkbootfs.o: cpio/mkbootfs.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 mkbootimg/mkbootimg: mkbootimg/mkbootimg.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -static -s
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -s
 	 
 mkbootimg/mkbootimg_mt65xx: mkbootimg/mkbootimg_mt65xx.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -static -s
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -s
 
 mkbootimg/unmkbootimg: mkbootimg/unmkbootimg.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LDFLAGS) -static -s
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LDFLAGS) -s
 
 cpio/mkbootfs: cpio/mkbootfs.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ -I../include $(LDFLAGS) -static -s
+	 $(CROSS_COMPILE)$(CC) -o $@ $^ -I../include $(LDFLAGS) -s
 
 # You should always run strip --strip-all
 # or you can apply '-s' as seen above
@@ -110,5 +132,6 @@ clean:
 	$(RM) libmincrypt.a
 	$(RM) $(LIB_OBJS)
 	$(RM) $(BINARY_NAME)
+	$(RM) $(LZ4)
 	
 .PHONY: clean

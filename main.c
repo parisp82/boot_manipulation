@@ -26,6 +26,7 @@
  int unmkbootimg_main(int argc, char **argv[]);
  int mkbootfs_main(int argc, char **argv[]);
  int mkbootimg_mt65xx_main(int argc, char **argv[]);
+ int lz4_main(int argc, char **argv[]);
  int main(int argc, char* argv[]) {
     int arg_multicall = 0;
     char *callname;
@@ -39,6 +40,8 @@ callname = basename(argv[0]);
         return mkbootimg_main(argc, argv);
     } else if (strcmp(callname, "unmkbootimg") == 0) {
         return unmkbootimg_main(argc, argv);
+    } else if (strcmp(callname, "lz4") == 0) {
+        return lz4_main(argc, argv);
     } else if (strcmp(callname, "mkbootimg_mt65xx") == 0) {
         return mkbootimg_mt65xx_main(argc, argv);
     } else if (strcmp(callname, "mkbootfs") == 0) {
@@ -49,6 +52,7 @@ callname = basename(argv[0]);
                    "* mkbootimg\n"
                    "* unmkbootimg\n"
                    "* mkbootimg_mt65xx\n"
+                   "* lz4\n"
                    "* mkbootfs\n");
             return -1;
         }
