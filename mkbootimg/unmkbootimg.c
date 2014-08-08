@@ -67,7 +67,7 @@ static unsigned save_file(const char *fn, const void* data, const unsigned sz)
     return _sz;
 }
 
-int usage(void)
+int unmkbootimg_usage(void)
 {
     fprintf(stderr,"usage: unmkbootimg\n"
             "       [ --kernel <filename> ]\n"
@@ -97,7 +97,7 @@ int unmkbootimg_main(int argc, char **argv)
         char *arg = argv[0];
         char *val = argv[1];
         if(argc < 2) {
-            return usage();
+            return unmkbootimg_usage();
         }
         argc -= 2;
         argv += 2;
@@ -110,13 +110,13 @@ int unmkbootimg_main(int argc, char **argv)
         } else if(!strcmp(arg, "--second")) {
            second_fn = val;
         } else {
-            return usage();
+            return unmkbootimg_usage();
         }
     }
 
     if(bootimg == 0) {
         fprintf(stderr,"error: no input filename specified\n");
-        return usage();
+        return unmkbootimg_usage();
     }
 
     file_data = load_file(bootimg, &file_size);

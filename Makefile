@@ -4,7 +4,7 @@ AR = ar rcv
 EXT = a
 RELEASE=r120
 # These flags are for lz4
-FLAGS = -std=c99 -Wall -Wextra -Wundef -Wshadow -Wstrict-prototypes -DLZ4_VERSION=\"$(RELEASE)\"
+LZ4FLAGS = -std=c99 -Wall -Wextra -Wundef -Wshadow -Wstrict-prototypes -DLZ4_VERSION=\"$(RELEASE)\"
 CFLAGS = -ffunction-sections -fdata-sections -O3 -static
 LDFLAGS = -Wl,--gc-sections
 LIB = libmincrypt.$(EXT)
@@ -14,6 +14,7 @@ PROGRAMS = lz4-r120/programs
 OBJ = main.o mkbootimg/mkbootimg.o mkbootimg/unmkbootimg.o mkbootimg/mkbootimg_mt65xx.o cpio/mkbootfs.o
 BINARY = mkbootimg/mkbootimg mkbootimg/unmkbootimg mkbootimg/mkbootimg_mt65xx cpio/mkbootfs
 LZ4 = $(LZ4DIR)/lz4.o $(LZ4DIR)/lz4hc.o $(PROGRAMS)/bench.o $(PROGRAMS)/xxhash.o $(PROGRAMS)/lz4io.o $(PROGRAMS)/lz4cli.o
+DTTOOLS = dtb/dtbtool.o dtc/dtc.o dtc/flattree.o dtc/fstree.o dtc/data.o dtc/livetree.o dtc/treesource.o dtc/srcpos.o dtc/checks.o dtc/util.o dtc/dtc-lexer.lex.o dtc/dtc-parser.tab.o
 INC = -I..
 RM = rm -f
 BINARY_NAME = bm
@@ -31,7 +32,8 @@ multi:
 	 make $(LIB_OBJS)
 	 make $(OBJ)
 	 make $(LZ4)
-	$(CC) $(CFLAGS) -s -o $(BINARY_NAME) $(LIB_OBJS) $(OBJ) $(LZ4)
+	 make $(DTTOOLS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -s -o $(BINARY_NAME) $(LIB_OBJS) $(OBJ) $(LZ4) $(DTTOOLS)
 
 # Passing --remove-section=.comment
 # and --remove-section=.note to strip
@@ -53,13 +55,13 @@ all: $(LIB_OBJS) $(OBJ) $(BINARY)
 # properly then a compatible toolchain is required.
 
 libmincrypt/sha.o: libmincrypt/sha.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^ $(INC)
 
 libmincrypt/rsa.o: libmincrypt/rsa.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^ $(INC)
 
 libmincrypt/sha256.o: libmincrypt/sha256.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^ $(INC)
 
 # Commented out due to lack of support
 # with AR while compiling from my phone
@@ -71,49 +73,73 @@ libmincrypt/sha256.o: libmincrypt/sha256.c
 # but will also significantly increase their performance.
 
 main.o: main.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 
 $(LZ4DIR)/lz4.o: $(LZ4DIR)/lz4.c
-	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+	$(CC) $(CFLAGS) $(LZ4FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
 
 $(LZ4DIR)/lz4hc.o: $(LZ4DIR)/lz4hc.c
-	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+	$(CC) $(CFLAGS) $(LZ4FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
 
 $(PROGRAMS)/bench.o: $(PROGRAMS)/bench.c
-	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+	$(CC) $(CFLAGS) $(LZ4FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
 
 $(PROGRAMS)/xxhash.o: $(PROGRAMS)/xxhash.c
-	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+	$(CC) $(CFLAGS) $(LZ4FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
 
 $(PROGRAMS)/lz4io.o: $(PROGRAMS)/lz4io.c
-	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+	$(CC) $(CFLAGS) $(LZ4FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
 
 $(PROGRAMS)/lz4cli.o: $(PROGRAMS)/lz4cli.c
-	$(CC) $(CFLAGS) $(FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+	$(CC) $(CFLAGS) $(LZ4FLAGS) $(LDFLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
 
 mkbootimg/mkbootimg.o: mkbootimg/mkbootimg.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 	
 mkbootimg/mkbootimg_mt65xx.o: mkbootimg/mkbootimg_mt65xx.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 
 mkbootimg/unmkbootimg.o: mkbootimg/unmkbootimg.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 
 cpio/mkbootfs.o: cpio/mkbootfs.c
-	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 
-mkbootimg/mkbootimg: mkbootimg/mkbootimg.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -s
-	 
-mkbootimg/mkbootimg_mt65xx: mkbootimg/mkbootimg_mt65xx.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LIB_OBJS) $(LDFLAGS) -s
+dtb/dtbtool.o: dtb/dtbtool.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 
-mkbootimg/unmkbootimg: mkbootimg/unmkbootimg.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ $(LDFLAGS) -s
+dtc/dtc.o: dtc/dtc.c          
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^ -Idtc/libfdt
 
-cpio/mkbootfs: cpio/mkbootfs.o
-	 $(CROSS_COMPILE)$(CC) -o $@ $^ -I../include $(LDFLAGS) -s
+dtc/flattree.o: dtc/flattree.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/fstree.o: dtc/fstree.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/data.o: dtc/data.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/livetree.o: dtc/livetree.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/treesource.o: dtc/treesource.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/srcpos.o: dtc/srcpos.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/checks.o: dtc/checks.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/util.o: dtc/util.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/dtc-lexer.lex.o: dtc/dtc-lexer.lex.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
+
+dtc/dtc-parser.tab.o: dtc/dtc-parser.tab.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) $(LDFLAGS) -c $^
 
 # You should always run strip --strip-all
 # or you can apply '-s' as seen above
@@ -133,5 +159,6 @@ clean:
 	$(RM) $(LIB_OBJS)
 	$(RM) $(BINARY_NAME)
 	$(RM) $(LZ4)
+	$(RM) $(DTTOOLS)
 	
 .PHONY: clean

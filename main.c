@@ -14,7 +14,7 @@
 
 
 
-
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,6 +27,8 @@
  int mkbootfs_main(int argc, char **argv[]);
  int mkbootimg_mt65xx_main(int argc, char **argv[]);
  int lz4_main(int argc, char **argv[]);
+ int dtbtool_main(int argc, char **argv[]);
+ int dtc_main(int argc, char **argv[]);
  int main(int argc, char* argv[]) {
     int arg_multicall = 0;
     char *callname;
@@ -46,12 +48,18 @@ callname = basename(argv[0]);
         return mkbootimg_mt65xx_main(argc, argv);
     } else if (strcmp(callname, "mkbootfs") == 0) {
         return mkbootfs_main(argc, argv);
+    } else if (strcmp(callname, "dtbtool") == 0) {
+        return dtbtool_main(argc, argv);
+    } else if (strcmp(callname, "dtc") == 0) {
+        return dtc_main(argc, argv);
     } else {
         if (argc < 2 || arg_multicall) {
             printf("Info: Multicall binary for:\n"
                    "* mkbootimg\n"
                    "* unmkbootimg\n"
                    "* mkbootimg_mt65xx\n"
+                   "* dtbtool\n"
+                   "* dtc (Use with -h option)\n"
                    "* lz4\n"
                    "* mkbootfs\n");
             return -1;
