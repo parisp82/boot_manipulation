@@ -18,7 +18,6 @@
  * Taken from linux/capability.h, with minor modifications
  */
 
-#ifndef _ANDROID_FILESYSTEM_CAPABILITY_H
 #define _ANDROID_FILESYSTEM_CAPABILITY_H
 
 #include <stdint.h>
@@ -113,5 +112,3 @@ struct vfs_cap_data {
 #undef __user
 #undef __u32
 #undef __le32
-
-#endif
