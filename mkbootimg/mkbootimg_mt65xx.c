@@ -57,7 +57,7 @@ oops:
 
 int mkbootimg_mt65xx_usage(void)
 {
-    fprintf(stderr,"usage: mkbootimg\n"
+    fprintf(stderr,"usage: mkbootimg_mt65xx\n"
             "       --kernel <filename>\n"
             "       --ramdisk <filename>\n"
             "       [ --second <2ndbootloader-filename> ]\n"
