@@ -29,7 +29,7 @@
  int lz4_main(int argc, char **argv[]);
  int dtbtool_main(int argc, char **argv[]);
  int dtc_main(int argc, char **argv[]);
- int main(int argc, char* argv[]) {
+ int main(int argc, char **argv[]) {
     int arg_multicall = 0;
     char *callname;
     goto parse_callname;

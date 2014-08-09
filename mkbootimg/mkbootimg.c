@@ -29,29 +29,28 @@ static void *load_file(const char *fn, unsigned *_sz)
 {
     char *data;
     int sz;
-    FILE *fd;
+    int fd;
 
     data = 0;
-    fd = fopen(fn, "rb");
-    if(fd == 0) return 0;
+    fd = open(fn, O_RDONLY);
+    if(fd < 0) return 0;
 
-    if(fseek(fd, 0, SEEK_END) != 0) goto oops;
-    sz = ftell(fd);
+    sz = lseek(fd, 0, SEEK_END);
     if(sz < 0) goto oops;
 
-    if(fseek(fd, 0, SEEK_SET) != 0) goto oops;
+    if(lseek(fd, 0, SEEK_SET) != 0) goto oops;
 
     data = (char*) malloc(sz);
     if(data == 0) goto oops;
 
-    if(fread(data, 1, sz, fd) != sz) goto oops;
-    fclose(fd);
+    if(read(fd, data, sz) != sz) goto oops;
+    close(fd);
 
     if(_sz) *_sz = sz;
     return data;
 
 oops:
-    fclose(fd);
+    close(fd);
     if(data != 0) free(data);
     return 0;
 }
@@ -66,6 +65,10 @@ int mkbootimg_usage(void)
             "       [ --board <boardname> ]\n"
             "       [ --base <address> ]\n"
             "       [ --pagesize <pagesize> ]\n"
+            "       [ --kernel_offset <base offset> ]\n"
+            "       [ --ramdisk_offset <base offset> ]\n"
+            "       [ --second_offset <base offset> ]\n"
+            "       [ --tags_offset <base offset> ]\n"
             "       [ --dt <filename> ]\n"
             "       -o|--output <filename>\n"
             );
@@ -74,12 +77,12 @@ int mkbootimg_usage(void)
 
 
 
-static unsigned char padding[16384] = { 0, };
+static unsigned char padding[131072] = { 0, };
 
-int write_padding(FILE *fd, unsigned pagesize, unsigned itemsize)
+int write_padding(int fd, unsigned pagesize, unsigned itemsize)
 {
     unsigned pagemask = pagesize - 1;
-    unsigned count;
+    ssize_t count;
 
     if((itemsize & pagemask) == 0) {
         return 0;
@@ -87,7 +90,7 @@ int write_padding(FILE *fd, unsigned pagesize, unsigned itemsize)
 
     count = pagesize - (itemsize & pagemask);
 
-    if(fwrite(padding, 1, count, fd) != count) {
+    if(write(fd, padding, count) != count) {
         return -1;
     } else {
         return 0;
@@ -110,9 +113,9 @@ int mkbootimg_main(int argc, char **argv)
     char *dt_fn = 0;
     void *dt_data = 0;
     unsigned pagesize = 2048;
-    FILE *fd;
+    int fd;
     SHA_CTX ctx;
-    uint8_t* sha;
+    const uint8_t* sha;
     unsigned base           = 0x10000000;
     unsigned kernel_offset  = 0x00008000;
     unsigned ramdisk_offset = 0x01000000;
@@ -157,8 +160,7 @@ int mkbootimg_main(int argc, char **argv)
             board = val;
         } else if(!strcmp(arg,"--pagesize")) {
             pagesize = strtoul(val, 0, 10);
-            if ((pagesize != 2048) && (pagesize != 4096)
-                && (pagesize != 8192) && (pagesize != 16384)) {
+            if ((pagesize != 2048) && (pagesize != 4096) && (pagesize != 8192) && (pagesize != 16384) && (pagesize != 32768) && (pagesize != 65536) && (pagesize != 131072)) {
                 fprintf(stderr,"error: unsupported page size %d\n", pagesize);
                 return -1;
             }
@@ -195,7 +197,7 @@ int mkbootimg_main(int argc, char **argv)
         return mkbootimg_usage();
     }
 
-    strcpy(hdr.name, board);
+    strcpy((char *) hdr.name, board);
 
     memcpy(hdr.magic, BOOT_MAGIC, BOOT_MAGIC_SIZE);
 
@@ -240,10 +242,10 @@ int mkbootimg_main(int argc, char **argv)
 
     if(dt_fn) {
         dt_data = load_file(dt_fn, &hdr.dt_size);
-            if (dt_data == 0) {
-                fprintf(stderr,"error: could not load device tree image '%s'\n", dt_fn);
-                return 1;
-            }
+        if (dt_data == 0) {
+            fprintf(stderr,"error: could not load device tree image '%s'\n", dt_fn);
+            return 1;
+        }
     }
 
     /* put a hash of the contents in the header so boot images can be
@@ -264,36 +266,35 @@ int mkbootimg_main(int argc, char **argv)
     memcpy(hdr.id, sha,
            SHA_DIGEST_SIZE > sizeof(hdr.id) ? sizeof(hdr.id) : SHA_DIGEST_SIZE);
 
-    fd = fopen(bootimg, "wb");
-    if(fd == 0) {
+    fd = open(bootimg, O_CREAT | O_TRUNC | O_WRONLY, 0644);
+    if(fd < 0) {
         fprintf(stderr,"error: could not create '%s'\n", bootimg);
         return 1;
     }
 
-    if(fwrite(&hdr, 1, sizeof(hdr), fd) != sizeof(hdr)) goto fail;
+    if(write(fd, &hdr, sizeof(hdr)) != sizeof(hdr)) goto fail;
     if(write_padding(fd, pagesize, sizeof(hdr))) goto fail;
 
-    if(fwrite(kernel_data, 1, hdr.kernel_size, fd) != hdr.kernel_size) goto fail;
+    if(write(fd, kernel_data, hdr.kernel_size) != (ssize_t) hdr.kernel_size) goto fail;
     if(write_padding(fd, pagesize, hdr.kernel_size)) goto fail;
 
-    if(fwrite(ramdisk_data, 1, hdr.ramdisk_size, fd) != hdr.ramdisk_size) goto fail;
+    if(write(fd, ramdisk_data, hdr.ramdisk_size) != (ssize_t) hdr.ramdisk_size) goto fail;
     if(write_padding(fd, pagesize, hdr.ramdisk_size)) goto fail;
 
     if(second_data) {
-        if(fwrite(second_data, 1, hdr.second_size, fd) != hdr.second_size) goto fail;
-        if(write_padding(fd, pagesize, hdr.ramdisk_size)) goto fail;
+        if(write(fd, second_data, hdr.second_size) != (ssize_t) hdr.second_size) goto fail;
+        if(write_padding(fd, pagesize, hdr.second_size)) goto fail;
     }
 
     if(dt_data) {
-        if(write(fd, dt_data, hdr.dt_size) != hdr.dt_size) goto fail;
+        if(write(fd, dt_data, hdr.dt_size) != (ssize_t) hdr.dt_size) goto fail;
         if(write_padding(fd, pagesize, hdr.dt_size)) goto fail;
     }
-
     return 0;
 
 fail:
     unlink(bootimg);
-    fclose(fd);
+    close(fd);
     fprintf(stderr,"error: failed writing '%s': %s\n", bootimg,
             strerror(errno));
     return 1;

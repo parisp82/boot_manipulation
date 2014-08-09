@@ -1,4 +1,9 @@
-/* tools/mkbootimg/unmkbootimg.c
+/* mkbootimg/mkbootimg.c
+**
+** Modified by Modding.MyMind to undo
+** what mkbootimg does.
+**
+** Copyright 2007, The Android Open Source Project
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -20,13 +25,14 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "../libmincrypt/mincrypt/sha.h"
 #include "bootimg.h"
 
 static void *load_file(const char *fn, unsigned *_sz)
 {
     char *data;
     int sz;
-    FILE *fd;
+    FILE* fd;
 
     data = 0;
     fd = fopen(fn, "rb");
@@ -55,7 +61,7 @@ oops:
 
 static unsigned save_file(const char *fn, const void* data, const unsigned sz)
 {
-    FILE *fd;
+    FILE* fd;
     unsigned _sz = 0;
 
     fd = fopen(fn, "wb");
@@ -70,25 +76,27 @@ static unsigned save_file(const char *fn, const void* data, const unsigned sz)
 int unmkbootimg_usage(void)
 {
     fprintf(stderr,"usage: unmkbootimg\n"
-            "       [ --kernel <filename> ]\n"
-            "       [ --ramdisk <filename> ]\n"
+            "       --kernel <filename>\n"
+            "       --ramdisk <filename>\n"
             "       [ --second <2ndbootloader-filename> ]\n"
+            "       [ --dt <filename> ]\n"
             "       -i|--input <filename>\n"
             );
     return 1;
 }
 
 int unmkbootimg_main(int argc, char **argv)
-{
-    void *file_data = 0;
-    unsigned file_size = 0;
+{	
     boot_img_hdr *hdr = 0;
 
     char *kernel_fn = "kernel";
     char *ramdisk_fn = "ramdisk.cpio.gz";
     char *second_fn = "second_bootloader";
     char *bootimg = 0;
+    char *dt_fn = "device_tree";
+    unsigned file_size = 0;
     unsigned offset;
+    void *file_data = 0;
 
     argc--;
     argv++;
@@ -108,11 +116,19 @@ int unmkbootimg_main(int argc, char **argv)
         } else if(!strcmp(arg, "--ramdisk")) {
             ramdisk_fn = val;
         } else if(!strcmp(arg, "--second")) {
-           second_fn = val;
+            second_fn = val;
+        } else if(!strcmp(arg, "--dt")) {
+            dt_fn = val;
         } else {
             return unmkbootimg_usage();
         }
     }
+
+	 int total_read = 0;
+    boot_img_hdr header;
+    FILE* f = fopen(bootimg, "rb");
+    //printf("Reading header...\n");
+    fread(&header, sizeof(header), 1, f);
 
     if(bootimg == 0) {
         fprintf(stderr,"error: no input filename specified\n");
@@ -124,10 +140,12 @@ int unmkbootimg_main(int argc, char **argv)
         fprintf(stderr,"error: could not load image '%s'\n", bootimg);
         return 1;
     }
+
     if(file_size < sizeof(boot_img_hdr)) {
         fprintf(stderr,"error: file too small for a boot image\n");
         goto fail;
     }
+
     hdr = (boot_img_hdr *)file_data;
     if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE) != 0) {
         fprintf(stderr,"error: not an Android boot image\n");
@@ -171,7 +189,23 @@ int unmkbootimg_main(int argc, char **argv)
             second_fn, hdr->second_size);
     }
 
-    /* Ideally, we'd also check the SHA sums here */
+    if(hdr->dt_size != 0) {
+        offset = ((hdr->kernel_size + hdr->ramdisk_size + hdr->second_size
+            + 2*hdr->page_size - 1) / hdr->page_size) * hdr->page_size;
+        if (save_file(dt_fn, &((char *)file_data)[offset],
+            hdr->dt_size) != hdr->dt_size) {
+            fprintf(stderr,"error: could not save dt image '%s'\n",
+                dt_fn);
+            return 1;
+        }
+        printf("dt image written to '%s' (%d bytes)\n",
+            dt_fn, hdr->dt_size);
+    }
+
+    /* put a hash of the contents in the header so boot images can be
+     * differentiated based on their first 2k.
+     * This section has been removed.
+     */
 
     printf("\nTo rebuild this boot image, you can use the command:\n");
     printf("  mkbootimg --base 0 --pagesize %d ", hdr->page_size);
@@ -183,7 +217,7 @@ int unmkbootimg_main(int argc, char **argv)
     printf("--second_offset 0x%08x --tags_offset 0x%08x ",
          hdr->second_addr, hdr->tags_addr);
     if(hdr->cmdline[0] != 0) {
-        printf("--cmdline '%s%s' ", hdr->cmdline, hdr->extra_cmdline);
+        printf("--cmdline '%s%s' ", header.cmdline, header.extra_cmdline);
     }
     if(hdr->kernel_size != 0) {
         printf("--kernel %s ", kernel_fn);
@@ -193,6 +227,9 @@ int unmkbootimg_main(int argc, char **argv)
     }
     if(hdr->second_size != 0) {
         printf("--second %s ", second_fn);
+    }
+   if(hdr->dt_size != 0) {
+        printf("--dt %s ", dt_fn);
     }
     printf("-o %s\n", bootimg);
 

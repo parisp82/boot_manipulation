@@ -25,8 +25,8 @@
 ** ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _EMBEDDED_RSA_H_
-#define _EMBEDDED_RSA_H_
+#ifndef _RSA_H_
+#define _RSA_H_
 
 #include <inttypes.h>
 
@@ -55,4 +55,4 @@ int RSA_verify(const RSAPublicKey *key,
 }
 #endif
 
-#endif
+#endif // _RSA_H_
