@@ -124,12 +124,6 @@ int unmkbootimg_main(int argc, char **argv)
         }
     }
 
-	 int total_read = 0;
-    boot_img_hdr header;
-    FILE* f = fopen(bootimg, "rb");
-    //printf("Reading header...\n");
-    fread(&header, sizeof(header), 1, f);
-
     if(bootimg == 0) {
         fprintf(stderr,"error: no input filename specified\n");
         return unmkbootimg_usage();
@@ -217,7 +211,7 @@ int unmkbootimg_main(int argc, char **argv)
     printf("--second_offset 0x%08x --tags_offset 0x%08x ",
          hdr->second_addr, hdr->tags_addr);
     if(hdr->cmdline[0] != 0) {
-        printf("--cmdline '%s%s' ", header.cmdline, header.extra_cmdline);
+        printf("--cmdline '%s%s' ", hdr->cmdline, hdr->extra_cmdline);
     }
     if(hdr->kernel_size != 0) {
         printf("--kernel %s ", kernel_fn);
