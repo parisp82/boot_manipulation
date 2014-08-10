@@ -21,7 +21,6 @@
 #include <libgen.h>
 
 
-
  int mkbootimg_main(int argc, char **argv[]);
  int unmkbootimg_main(int argc, char **argv[]);
  int mkbootfs_main(int argc, char **argv[]);
@@ -60,16 +59,18 @@ callname = basename(argv[0]);
         return shc_main(argc, argv);
     } else {
         if (argc < 2 || arg_multicall) {
+        	printf("\nBoot Manipulation: Modding.MyMind - XDA/AF");
+        	printf("\nCompiled on: %s %s\n",__DATE__, __TIME__);
             printf("\nInfo: Multicall binary for:\n"
-                   "* shc\n"
-                   "* bootimg-info\n"
-                   "* mkbootimg\n"
-                   "* unmkbootimg\n"
-                   "* mkbootimg_mt65xx\n"
-                   "* dtbtool\n"
-                   "* dtc (Use with -h option)\n"
-                   "* lz4\n"
-                   "* mkbootfs\n\n");
+                   "     * shc\n"
+                   "     * bootimg-info\n"
+                   "     * mkbootimg\n"
+                   "     * unmkbootimg\n"
+                   "     * mkbootimg_mt65xx\n"
+                   "     * dtbtool\n"
+                   "     * dtc (Use with -h option)\n"
+                   "     * lz4\n"
+                   "     * mkbootfs\n\n");
             return -1;
         }
 
