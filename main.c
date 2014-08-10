@@ -29,6 +29,8 @@
  int lz4_main(int argc, char **argv[]);
  int dtbtool_main(int argc, char **argv[]);
  int dtc_main(int argc, char **argv[]);
+ int bootimg_info_main(int argc, char **argv[]);
+ int shc_main(int argc, char **argv[]);
  int main(int argc, char **argv[]) {
     int arg_multicall = 0;
     char *callname;
@@ -52,16 +54,22 @@ callname = basename(argv[0]);
         return dtbtool_main(argc, argv);
     } else if (strcmp(callname, "dtc") == 0) {
         return dtc_main(argc, argv);
+    } else if (strcmp(callname, "bootimg-info") == 0) {
+        return bootimg_info_main(argc, argv);
+    } else if (strcmp(callname, "shc") == 0) {
+        return shc_main(argc, argv);
     } else {
         if (argc < 2 || arg_multicall) {
-            printf("Info: Multicall binary for:\n"
+            printf("\nInfo: Multicall binary for:\n"
+                   "* shc\n"
+                   "* bootimg-info\n"
                    "* mkbootimg\n"
                    "* unmkbootimg\n"
                    "* mkbootimg_mt65xx\n"
                    "* dtbtool\n"
                    "* dtc (Use with -h option)\n"
                    "* lz4\n"
-                   "* mkbootfs\n");
+                   "* mkbootfs\n\n");
             return -1;
         }
 

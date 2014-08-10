@@ -3,18 +3,28 @@ STRIP = strip
 AR = ar rcv
 EXT = a
 RELEASE=r120
-# These flags are for lz4
-LZ4FLAGS = -std=c99 -Wall -Wextra -Wundef -Wshadow -Wstrict-prototypes -DLZ4_VERSION=\"$(RELEASE)\"
+
 CFLAGS = -O3 -static
 LDFLAGS = -ffunction-sections -fdata-sections -Wl,--gc-sections
-LIB = libmincrypt.$(EXT)
-LIB_OBJS = libmincrypt/sha.o libmincrypt/rsa.o libmincrypt/sha256.o libmincrypt/dsa_sig.o libmincrypt/p256.o libmincrypt/p256_ec.o libmincrypt/p256_ecdsa.o
+
+# These flags are for lz4
+LZ4FLAGS = -std=c99 -Wall -Wextra -Wundef -Wshadow -Wstrict-prototypes -DLZ4_VERSION=\"$(RELEASE)\"
+
 LZ4DIR = lz4-r120
+
 PROGRAMS = lz4-r120/programs
-OBJ = main.o mkbootimg/mkbootimg.o mkbootimg/unmkbootimg.o mkbootimg/mkbootimg_mt65xx.o cpio/mkbootfs.o
-BINARY = mkbootimg/mkbootimg mkbootimg/unmkbootimg mkbootimg/mkbootimg_mt65xx cpio/mkbootfs
+
+LIB_OBJS = libmincrypt/sha.o libmincrypt/rsa.o libmincrypt/sha256.o libmincrypt/dsa_sig.o libmincrypt/p256.o libmincrypt/p256_ec.o libmincrypt/p256_ecdsa.o
+
+OBJ = main.o mkbootimg/mkbootimg.o mkbootimg/unmkbootimg.o mkbootimg/mkbootimg_mt65xx.o cpio/mkbootfs.o mkbootimg/bootimg-info.o
+
 LZ4 = $(LZ4DIR)/lz4.o $(LZ4DIR)/lz4hc.o $(PROGRAMS)/bench.o $(PROGRAMS)/xxhash.o $(PROGRAMS)/lz4io.o $(PROGRAMS)/lz4cli.o
+
 DTTOOLS = dtb/dtbtool.o dtc/dtc.o dtc/flattree.o dtc/fstree.o dtc/data.o dtc/livetree.o dtc/treesource.o dtc/srcpos.o dtc/checks.o dtc/util.o dtc/dtc-lexer.lex.o dtc/dtc-parser.tab.o
+
+# A generic script compiler
+SHC = shc-3.8.9/shc-3.8.9.o
+
 INC = -I..
 RM = rm -f
 BINARY_NAME = bm
@@ -33,7 +43,8 @@ multi:
 	 make $(OBJ)
 	 make $(LZ4)
 	 make $(DTTOOLS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -s -o $(BINARY_NAME) $(LIB_OBJS) $(OBJ) $(LZ4) $(DTTOOLS)
+	 make $(SHC)
+	$(CC) $(CFLAGS) $(LDFLAGS) -s -o $(BINARY_NAME) $(LIB_OBJS) $(OBJ) $(LZ4) $(DTTOOLS) $(SHC)
 
 # Passing --remove-section=.comment
 # and --remove-section=.note to strip
@@ -44,14 +55,10 @@ multi:
 	$(STRIP) --remove-section=.comment $(BINARY_NAME)
 	$(STRIP) --remove-section=.note $(BINARY_NAME)
 
-# Run 'make all' to compile all three binaries statically
+# This is here to stop the makefile - ignore the error it reports.
+	 exit 0
 
-# Deprecated
-all: $(LIB_OBJS) $(OBJ) $(BINARY)
 
-# The following were included due to lack of support with AR
-# while compiling on my device. To use AR on a device
-# properly then a compatible toolchain is required.
 
 libmincrypt/sha.o: libmincrypt/sha.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
@@ -73,11 +80,6 @@ libmincrypt/p256_ec.o: libmincrypt/p256_ec.c
 
 libmincrypt/p256_ecdsa.o: libmincrypt/p256_ecdsa.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^ $(INC)
-
-# Commented out due to lack of support
-# with AR while compiling from my phone
-#$(LIB): $(LIB_OBJS)
-#	 $(CROSS_COMPILE)$(AR) $@ $^
 
 # Use -O3 optimizations when compiling .c source to .o
 # This will significantly increase the final build size
@@ -103,6 +105,9 @@ $(PROGRAMS)/lz4io.o: $(PROGRAMS)/lz4io.c
 
 $(PROGRAMS)/lz4cli.o: $(PROGRAMS)/lz4cli.c
 	$(CC) $(CFLAGS) $(LZ4FLAGS) -DDISABLE_LZ4C_LEGACY_OPTIONS  -o $@ -c $^
+
+mkbootimg/bootimg-info.o: mkbootimg/bootimg-info.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
 mkbootimg/mkbootimg.o: mkbootimg/mkbootimg.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
@@ -152,6 +157,9 @@ dtc/dtc-lexer.lex.o: dtc/dtc-lexer.lex.c
 dtc/dtc-parser.tab.o: dtc/dtc-parser.tab.c
 	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
 
+shc-3.8.9/shc-3.8.9.o: shc-3.8.9/shc-3.8.9.c
+	$(CROSS_COMPILE)$(CC) -o $@ $(CFLAGS) -c $^
+
 # You should always run strip --strip-all
 # or you can apply '-s' as seen above
 # on the final executable (assuming that
@@ -171,5 +179,6 @@ clean:
 	$(RM) $(BINARY_NAME)
 	$(RM) $(LZ4)
 	$(RM) $(DTTOOLS)
+	$(RM) $(SHC)
 	
 .PHONY: clean
