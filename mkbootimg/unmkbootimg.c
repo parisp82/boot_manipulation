@@ -211,7 +211,7 @@ int unmkbootimg_main(int argc, char **argv)
     printf("--second_offset 0x%08x --tags_offset 0x%08x ",
          hdr->second_addr, hdr->tags_addr);
     if(hdr->cmdline[0] != 0) {
-        printf("--cmdline '%s%s' ", hdr->cmdline, hdr->extra_cmdline);
+        printf("--cmdline %s%s ", hdr->cmdline, hdr->extra_cmdline);
     }
     if(hdr->kernel_size != 0) {
         printf("--kernel %s ", kernel_fn);
